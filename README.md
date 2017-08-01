@@ -2,8 +2,8 @@
 
 ### usage
 
-1. $ docker pull daxanya/kuromoji-server
-2. $ docker run -d -p 8080:8080 daxanya/kuromoji-server
+1. $ docker pull daxanya/kuromoji-server-alpine
+2. $ docker run -d -p 8080:8080 daxanya/kuromoji-server-alpine
 3. access -> http://localhost:8080/kuromoji/
 
 
