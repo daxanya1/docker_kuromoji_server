@@ -2,9 +2,8 @@
 
 ## Make docker image
 
-1. git clone https://github.com/atilika/kuromoji-server.git
-2. docker build ./ -t alpine_kuromoji_server
-3. docker run -d -p 8080:8080 alpine_kuromoji_server mvn jetty:run
+1. docker build ./ -t kuromoji_server
+2. docker run -d -p 8080:8080 kuromoji_server
 
 
 ## ref

@@ -21,13 +21,11 @@ ENV MAVEN_VERSION 3.3.9
 ENV MAVEN_HOME /usr/lib/mvn
 ENV PATH $MAVEN_HOME/bin:$PATH
 
-COPY kuromoji-server /usr/src/app
-
 RUN set -x \
 	&& apk add --no-cache \
 		openjdk8="$JAVA_ALPINE_VERSION" \
 	&& [ "$JAVA_HOME" = "$(docker-java-home)" ] && \
-  apk add --update ca-certificates && \
+  apk add --no-cache --update ca-certificates && \
   find /usr/share/ca-certificates/mozilla/ -name "*.crt" -exec keytool -import -trustcacerts \
   -keystore /usr/lib/jvm/java-1.8-openjdk/jre/lib/security/cacerts -storepass changeit -noprompt \
   -file {} -alias {} \; && \
@@ -36,10 +34,6 @@ RUN set -x \
   tar -zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz && \
   rm apache-maven-$MAVEN_VERSION-bin.tar.gz && \
   mv apache-maven-$MAVEN_VERSION /usr/lib/mvn && \
-  cd /usr/src/app && \
-  mvn install && \
-  mkdir /graphviz && \
-  apk add --no-cache graphviz && \
   addgroup -S jetty && adduser -D -S -H -G jetty jetty && rm -rf /etc/group- /etc/passwd- /etc/shadow- && \
   rm -rf /var/cache/apk/*
 
@@ -69,6 +63,7 @@ ENV JETTY_GPG_KEYS \
 	FBA2B18D238AB852DF95745C76157BDF03D0DCD6 \
 	# Greg Wilkins    <gregw@webtide.com>
 	5C9579B3DB2E506429319AAEF33B071B29559E1E
+ENV JETTY_BASE /var/lib/jetty
 
 RUN set -xe \
 	# Install required packages for build time. Will be removed when build finishes.
@@ -87,25 +82,23 @@ RUN set -xe \
 	&& rm -fr demo-base javadoc \
 	&& rm jetty.tar.gz* \
 	&& rm -fr jetty-distribution-$JETTY_VERSION/ \
-
-	# Remove installed packages and various cleanup
 	&& apk del .build-deps \
 	&& rm -fr .build-deps \
-	&& rm -rf /tmp/hsperfdata_root
-
-ENV JETTY_BASE /var/lib/jetty
-RUN mkdir -p "$JETTY_BASE"
-WORKDIR $JETTY_BASE
-
-# Get the list of modules in the default start.ini and build new base with those modules, then add setuid
-RUN set -xe \
-	&& apk add --no-cache --virtual .build-deps coreutils \
+	&& rm -rf /tmp/hsperfdata_root \
+        && mkdir -p "$JETTY_BASE" \
+        && cd "$JETTY_BASE" \
+	&& apk add --no-cache --virtual .build-deps coreutils bash git openssh \
+        && git clone https://github.com/atilika/kuromoji-server.git /usr/src/app \
+        && cd /usr/src/app \
+        && mvn install \
 	&& modules="$(grep -- ^--module= "$JETTY_HOME/start.ini" | cut -d= -f2 | paste -d, -s)" \
 	&& java -jar "$JETTY_HOME/start.jar" --add-to-startd="$modules,setuid" \
 	&& chown -R jetty:jetty "$JETTY_BASE" \
 	&& apk del .build-deps \
 	&& rm -fr .build-deps \
 	&& rm -rf /tmp/hsperfdata_root \
-        && mvn jetty:stop || exit 0
+        && apk add --no-cache graphviz \
+        && rm -rf /var/cache/apk/* \
+        && (mvn jetty:stop || exit 0)
 WORKDIR /usr/src/app
-# CMD ["mvn", "jetty:run"]
+CMD ["mvn", "jetty:run"]
