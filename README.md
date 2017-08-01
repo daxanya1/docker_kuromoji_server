@@ -1,11 +1,15 @@
-## kuromoji-server
+## kuromoji-server-alpine
 
-### usage
+### dockerhub usage
 
 1. $ docker pull daxanya/kuromoji-server-alpine
 2. $ docker run -d -p 8080:8080 daxanya/kuromoji-server-alpine
 3. access -> http://localhost:8080/kuromoji/
 
+### make docker image
+
+1. $ git clone https://github.com/daxanya1/docker_kuromoji_server.git
+2. $ docker build -t kuromoji-server-alpine:latest - < ./Dockerfile
 
 ### include
 + kuromoji-server (ref: https://github.com/atilika/kuromoji-server)
