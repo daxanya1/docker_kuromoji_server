@@ -1,6 +1,6 @@
 ## kuromoji-server-alpine
 
-### dockerhub usage
+### usage
 
 1. $ docker pull daxanya/kuromoji-server-alpine
 2. $ docker run -d -p 8080:8080 daxanya/kuromoji-server-alpine
