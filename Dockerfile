@@ -67,7 +67,7 @@ ENV JETTY_BASE /var/lib/jetty
 
 RUN set -xe \
 	# Install required packages for build time. Will be removed when build finishes.
-	&& apk add --no-cache --virtual .build-deps gnupg curl \
+	&& apk add --no-cache --virtual .build-deps gnupg curl coreutils bash git openssh \
 
 	&& curl -SL "$JETTY_TGZ_URL" -o jetty.tar.gz \
 	&& curl -SL "$JETTY_TGZ_URL.asc" -o jetty.tar.gz.asc \
@@ -82,15 +82,12 @@ RUN set -xe \
 	&& rm -fr demo-base javadoc \
 	&& rm jetty.tar.gz* \
 	&& rm -fr jetty-distribution-$JETTY_VERSION/ \
-	&& apk del .build-deps \
-	&& rm -fr .build-deps \
-	&& rm -rf /tmp/hsperfdata_root \
         && mkdir -p "$JETTY_BASE" \
         && cd "$JETTY_BASE" \
-	&& apk add --no-cache --virtual .build-deps coreutils bash git openssh \
         && git clone https://github.com/atilika/kuromoji-server.git /usr/src/app \
         && cd /usr/src/app \
         && mvn install \
+        && rm -Rf .git \
 	&& modules="$(grep -- ^--module= "$JETTY_HOME/start.ini" | cut -d= -f2 | paste -d, -s)" \
 	&& java -jar "$JETTY_HOME/start.jar" --add-to-startd="$modules,setuid" \
 	&& chown -R jetty:jetty "$JETTY_BASE" \
